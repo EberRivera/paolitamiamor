@@ -1,0 +1,2764 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nuestro Primer Mes • Para Paola</title>
+
+  <!-- Meta SEO & Open Graph -->
+  <meta name="theme-color" content="#07050d">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Dancing+Script:wght@500;600;700&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap"
+    rel="stylesheet">
+
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Three.js & Controls (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <!-- GSAP Animations (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <!-- Canvas Confetti (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    /* =========================================================
+       VARIABLES Y ESTILOS GLOBALES
+       ========================================================= */
+    :root {
+      --gold-primary: #ff6ec7;
+      --gold-light: #c9b6ff;
+      --gold-warm: #7afcff;
+      --gold-amber: #b388ff;
+      --yellow-sunflower: #ffd54f;
+      --botanical-green: #2e7d32;
+      --cosmic-dark: #07050d;
+      --cosmic-purple: #130a22;
+      --glass-bg: rgba(14, 9, 24, 0.80);
+      --glass-border: rgba(255, 215, 0, 0.40);
+      --glass-glow: rgba(255, 193, 7, 0.28);
+      --text-main: #fffaf0;
+      --text-muted: #e0d5c1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body,
+    html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--cosmic-dark);
+      font-family: 'Montserrat', sans-serif;
+      color: var(--text-main);
+      touch-action: none;
+      /* Permite control táctil suave 3D sin comportamientos extraños del navegador */
+    }
+
+    /* Lienzo 3D Three.js */
+    #webglCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      display: block;
+      outline: none;
+    }
+
+    /* Atmósfera estelar de fondo */
+    .cosmic-atmosphere {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: radial-gradient(circle at 50% 50%, #1c1032 0%, #0d061a 55%, #040208 100%);
+      pointer-events: none;
+    }
+
+    /* =========================================================
+       BARRA SUPERIOR FLOTANTE
+       ========================================================= */
+    .top-bar {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .brand-title {
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    }
+
+    .brand-title h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.35rem;
+      letter-spacing: 3px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff5f6d, #ffc371, #7afcff, #b388ff, #ff6ec7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+    }
+
+    .brand-title span {
+      font-family: 'Dancing Script', cursive;
+      font-size: 1.25rem;
+      color: var(--gold-light);
+      margin-top: -2px;
+      text-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
+    }
+
+    .action-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      pointer-events: auto;
+    }
+
+    /* Botones circulares con Glassmorphism */
+    .glass-btn {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      color: var(--gold-primary);
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px var(--glass-glow);
+      position: relative;
+    }
+
+    .glass-btn:hover {
+      transform: scale(1.1) translateY(-2px);
+      border-color: var(--gold-light);
+      color: #ffffff;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 215, 0, 0.6);
+    }
+
+    .glass-btn:active {
+      transform: scale(0.95);
+    }
+
+    .glass-btn[data-tooltip]::before {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: -32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(6px);
+      background: rgba(10, 6, 18, 0.92);
+      border: 1px solid var(--glass-border);
+      color: var(--gold-light);
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      padding: 4px 10px;
+      border-radius: 6px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+      font-family: 'Cinzel', serif;
+      pointer-events: none;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .glass-btn:hover[data-tooltip]::before {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Reproductor de Audio Flotante */
+    .audio-player-wrapper {
+      display: flex;
+      align-items: center;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 30px;
+      padding: 4px 14px 4px 6px;
+      gap: 10px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px var(--glass-glow);
+      transition: all 0.35s ease;
+      cursor: pointer;
+    }
+
+    .audio-player-wrapper:hover {
+      border-color: var(--gold-light);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 215, 0, 0.4);
+    }
+
+    .vinyl-disc {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #332608 0%, #151109 40%, #ffd700 42%, #110e05 45%, #000000 100%);
+      border: 2px solid var(--gold-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold-primary);
+      font-size: 0.85rem;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+      transition: transform 0.3s ease;
+    }
+
+    .vinyl-disc.playing {
+      animation: spinVinyl 3.5s linear infinite;
+    }
+
+    @keyframes spinVinyl {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .sound-waves {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 16px;
+    }
+
+    .sound-waves span {
+      display: block;
+      width: 3px;
+      background: linear-gradient(to top, var(--gold-amber), var(--gold-light));
+      border-radius: 3px;
+      height: 4px;
+      transition: height 0.2s ease;
+    }
+
+    .sound-waves.active span:nth-child(1) {
+      animation: waveAnimation 1.1s infinite ease-in-out 0.1s;
+    }
+
+    .sound-waves.active span:nth-child(2) {
+      animation: waveAnimation 0.9s infinite ease-in-out 0.25s;
+    }
+
+    .sound-waves.active span:nth-child(3) {
+      animation: waveAnimation 1.3s infinite ease-in-out 0.4s;
+    }
+
+    .sound-waves.active span:nth-child(4) {
+      animation: waveAnimation 1.0s infinite ease-in-out 0.15s;
+    }
+
+    .sound-waves.active span:nth-child(5) {
+      animation: waveAnimation 1.2s infinite ease-in-out 0.3s;
+    }
+
+    @keyframes waveAnimation {
+
+      0%,
+      100% {
+        height: 4px;
+      }
+
+      50% {
+        height: 18px;
+      }
+    }
+
+    /* =========================================================
+       PANTALLA DE BIENVENIDA / INTRODUCCIÓN
+       ========================================================= */
+    .welcome-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, rgba(23, 13, 38, 0.90) 0%, rgba(7, 4, 13, 0.97) 100%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+      cursor: pointer;
+    }
+
+    .welcome-card {
+      max-width: 580px;
+      padding: 42px 34px;
+      text-align: center;
+      background: var(--glass-bg);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border: 1px solid var(--glass-border);
+      border-radius: 28px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 50px rgba(255, 193, 7, 0.3);
+      position: relative;
+      overflow: hidden;
+      animation: gentleFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes gentleFloat {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    .welcome-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .welcome-sunflower-icon {
+      font-size: 3.2rem;
+      color: var(--gold-primary);
+      text-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+      margin-bottom: 14px;
+      display: inline-block;
+      animation: rotateFlower 20s linear infinite;
+    }
+
+    @keyframes rotateFlower {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .welcome-subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      letter-spacing: 5px;
+      color: var(--gold-light);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .welcome-title {
+      font-family: 'Dancing Script', cursive;
+      font-size: 3.4rem;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #ff5f6d, #ffc371, #7afcff, #b388ff, #ff6ec7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 18px;
+      text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+    }
+
+    .welcome-text {
+      font-size: 1.02rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 30px;
+      font-weight: 300;
+    }
+
+    .welcome-btn {
+      background: linear-gradient(135deg, #ff6ec7, #b388ff, #7afcff);
+      border: none;
+      color: #120902;
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      letter-spacing: 2px;
+      font-size: 0.95rem;
+      padding: 16px 36px;
+      border-radius: 50px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 30px rgba(255, 193, 7, 0.5), 0 0 20px rgba(255, 215, 0, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 2;
+    }
+
+    .welcome-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 40px rgba(255, 193, 7, 0.7), 0 0 30px rgba(255, 215, 0, 0.6);
+      background: linear-gradient(135deg, #fff176 0%, #ffa000 100%);
+    }
+
+    .welcome-hint {
+      margin-top: 18px;
+      font-size: 0.78rem;
+      color: rgba(255, 248, 225, 0.6);
+      letter-spacing: 1px;
+    }
+
+    /* =========================================================
+       MODAL DE CARTAS DE AMOR (GLASSMORPHISM DE LUJO)
+       ========================================================= */
+    .letter-modal-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 50;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    .letter-modal-container.active {
+      pointer-events: auto;
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .letter-modal-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(6, 3, 12, 0.70);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .letter-card {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      max-height: 88vh;
+      background: rgba(18, 11, 30, 0.90);
+      backdrop-filter: blur(28px) saturate(200%);
+      -webkit-backdrop-filter: blur(28px) saturate(200%);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      border-radius: 28px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 50px rgba(255, 193, 7, 0.35);
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .letter-card::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .letter-card::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .letter-card::-webkit-scrollbar-thumb {
+      background: var(--gold-amber);
+      border-radius: 10px;
+    }
+
+    .letter-card.open {
+      transform: scale(1) translateY(0);
+    }
+
+    .corner-decor {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-color: var(--gold-primary);
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    .corner-tl {
+      top: 14px;
+      left: 14px;
+      border-top: 2px solid;
+      border-left: 2px solid;
+    }
+
+    .corner-tr {
+      top: 14px;
+      right: 14px;
+      border-top: 2px solid;
+      border-right: 2px solid;
+    }
+
+    .corner-bl {
+      bottom: 14px;
+      left: 14px;
+      border-bottom: 2px solid;
+      border-left: 2px solid;
+    }
+
+    .corner-br {
+      bottom: 14px;
+      right: 14px;
+      border-bottom: 2px solid;
+      border-right: 2px solid;
+    }
+
+    .letter-header {
+      padding: 34px 32px 16px;
+      text-align: center;
+      position: relative;
+    }
+
+    .letter-chapter-badge {
+      font-family: 'Cinzel', serif;
+      font-size: 0.76rem;
+      letter-spacing: 4px;
+      color: var(--gold-light);
+      text-transform: uppercase;
+      display: inline-block;
+      padding: 4px 14px;
+      background: rgba(255, 215, 0, 0.12);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    .letter-title {
+      font-family: 'Dancing Script', cursive;
+      font-size: 2.5rem;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #ff5f6d, #ffc371, #7afcff, #b388ff, #ff6ec7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+    }
+
+    .letter-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 14px 0 6px;
+      color: var(--gold-primary);
+      opacity: 0.7;
+    }
+
+    .letter-divider::before,
+    .letter-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(255, 215, 0, 0.4), transparent);
+    }
+
+    .letter-image-container {
+      margin: 10px 32px 18px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 193, 7, 0.2);
+      max-height: 220px;
+      position: relative;
+    }
+
+    .letter-image-container img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+      filter: brightness(0.95) contrast(1.05);
+      transition: transform 0.6s ease;
+    }
+
+    .letter-image-container:hover img {
+      transform: scale(1.04);
+    }
+
+    .letter-body {
+      padding: 0 34px 24px;
+      font-size: 0.98rem;
+      line-height: 1.8;
+      color: var(--text-main);
+      font-weight: 300;
+      text-align: justify;
+      hyphens: auto;
+    }
+
+    .letter-body p {
+      margin-bottom: 16px;
+    }
+
+    .letter-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .letter-signature {
+      margin-top: 20px;
+      text-align: right;
+      font-family: 'Dancing Script', cursive;
+      font-size: 1.6rem;
+      color: var(--gold-light);
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+    }
+
+    .letter-footer {
+      padding: 10px 32px 30px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .close-letter-btn {
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 152, 0, 0.15) 100%);
+      border: 1px solid var(--gold-primary);
+      color: var(--gold-light);
+      font-family: 'Cinzel', serif;
+      font-size: 0.88rem;
+      letter-spacing: 2px;
+      font-weight: 600;
+      padding: 12px 28px;
+      border-radius: 40px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 215, 0, 0.2);
+    }
+
+    .close-letter-btn:hover {
+      background: linear-gradient(135deg, #ff6ec7, #b388ff, #7afcff);
+      color: #160a03;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255, 193, 7, 0.6);
+    }
+
+    .modal-x-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 1.25rem;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.25s ease;
+    }
+
+    .modal-x-close:hover {
+      color: var(--gold-primary);
+      background: rgba(255, 215, 0, 0.12);
+      transform: rotate(90deg);
+    }
+
+    /* =========================================================
+       INSTRUCCIÓN FLOTANTE INFERIOR
+       ========================================================= */
+    .interactive-guide {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 30px;
+      padding: 8px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+      letter-spacing: 1.5px;
+      color: var(--gold-light);
+      font-family: 'Cinzel', serif;
+      pointer-events: none;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 15px var(--glass-glow);
+      transition: opacity 0.5s ease;
+    }
+
+    .interactive-guide i {
+      color: var(--gold-primary);
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseGlow {
+
+      0%,
+      100% {
+        opacity: 0.4;
+        transform: scale(0.9);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.15);
+      }
+    }
+
+    /* =========================================================
+       RESPONSIVIDAD Y AJUSTES MÓVILES
+       ========================================================= */
+    @media (max-width: 768px) {
+      .top-bar {
+        top: 14px;
+        left: 14px;
+        right: 14px;
+      }
+
+      .brand-title h1 {
+        font-size: 1.0rem;
+        letter-spacing: 1.5px;
+      }
+
+      .brand-title span {
+        font-size: 0.95rem;
+      }
+
+      .action-controls {
+        gap: 8px;
+      }
+
+      .glass-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 0.95rem;
+      }
+
+      .audio-player-wrapper {
+        padding: 3px 10px 3px 5px;
+        gap: 6px;
+      }
+
+      .vinyl-disc {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
+      }
+
+      .sound-waves {
+        height: 14px;
+        gap: 2px;
+      }
+
+      .sound-waves span {
+        width: 2.5px;
+      }
+
+      .welcome-card {
+        padding: 28px 18px;
+        margin: 14px;
+      }
+
+      .welcome-title {
+        font-size: 2.3rem;
+      }
+
+      .welcome-text {
+        font-size: 0.88rem;
+        line-height: 1.6;
+      }
+
+      .welcome-btn {
+        padding: 14px 28px;
+        font-size: 0.85rem;
+      }
+
+      .letter-card {
+        max-height: 92vh;
+        border-radius: 20px;
+      }
+
+      .letter-header {
+        padding: 24px 20px 12px;
+      }
+
+      .letter-title {
+        font-size: 1.9rem;
+      }
+
+      .letter-image-container {
+        margin: 6px 18px 14px;
+        max-height: 170px;
+      }
+
+      .letter-image-container img {
+        height: 170px;
+      }
+
+      .letter-body {
+        padding: 0 20px 18px;
+        font-size: 0.88rem;
+        line-height: 1.65;
+      }
+
+      .interactive-guide {
+        bottom: 14px;
+        font-size: 0.68rem;
+        padding: 6px 16px;
+        width: 92%;
+        justify-content: center;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Fondo de atmósfera cósmica -->
+  <div class="cosmic-atmosphere"></div>
+
+  <!-- Lienzo de renderizado Three.js -->
+  <canvas id="webglCanvas"></canvas>
+
+  <!-- Barra de controles y títulos superiores -->
+  <header class="top-bar">
+    <div class="brand-title">
+      <h1 id="uiMainTitle">Nuestro Primer Mes</h1>
+      <span id="uiSubTitle">Paola & Ismael • Nuestro Primer Mes</span>
+    </div>
+
+    <div class="action-controls">
+      <!-- Botón de Vista Corazón (Top-Down) -->
+      <button class="glass-btn" id="heartViewBtn" data-tooltip="Vista Corazón"
+        aria-label="Ver galaxia en forma de corazón desde arriba">
+        <i class="fa-solid fa-heart"></i>
+      </button>
+
+      <!-- Botón de Recentrar Vista -->
+      <button class="glass-btn" id="recenterBtn" data-tooltip="Recentrar Vista"
+        aria-label="Recentrar vista de la galaxia">
+        <i class="fa-solid fa-compass"></i>
+      </button>
+
+      <!-- Reproductor de Audio Flotante Minimalista -->
+      <div class="audio-player-wrapper" id="audioToggleBtn" data-tooltip="Música Romántica">
+        <div class="vinyl-disc" id="vinylDisc">
+          <i class="fa-solid fa-music"></i>
+        </div>
+        <div class="sound-waves" id="soundWaves">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Guía de interacción sutil en pantalla -->
+  <aside class="interactive-guide" id="interactiveGuide">
+    <i class="fa-solid fa-sun"></i>
+    <span>Toca las flores de colores para leer cada carta de nuestro primer mes</span>
+  </aside>
+
+  <!-- Pantalla de bienvenida cinematográfica -->
+  <div class="welcome-overlay" id="welcomeOverlay">
+    <div class="welcome-card" id="welcomeCard">
+      <div class="welcome-sunflower-icon">
+        <i class="fa-solid fa-sun"></i>
+      </div>
+      <div class="welcome-subtitle">Feliz primer mes, mi amor 💖</div>
+      <h2 class="welcome-title" id="welcomeRecipient">Para Paola</h2>
+      <p class="welcome-text">
+        Hace un mes me dijiste que sí, y desde entonces mi universo se llenó de colores. Esta galaxia arcoíris es para
+        celebrar nuestro primer mes como novios: cada flor guarda una carta y cada estrella late por ti. — Con amor,
+        Ismael
+      </p>
+      <button class="welcome-btn" id="startExperienceBtn">
+        <i class="fa-solid fa-sparkles"></i> Entrar a Nuestro Universo
+      </button>
+      <div class="welcome-hint">
+        (Toca aquí para iniciar la música y contemplar el corazón estelar)
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Glassmorphism de Carta de Amor -->
+  <div class="letter-modal-container" id="letterModalContainer">
+    <div class="letter-modal-backdrop" id="modalBackdrop"></div>
+
+    <article class="letter-card" id="letterCard">
+      <!-- Esquinas ornamentales -->
+      <div class="corner-decor corner-tl"></div>
+      <div class="corner-decor corner-tr"></div>
+      <div class="corner-decor corner-bl"></div>
+      <div class="corner-decor corner-br"></div>
+
+      <!-- Botón cerrar (X) -->
+      <button class="modal-x-close" id="modalXBtn" aria-label="Cerrar carta">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Encabezado de la carta -->
+      <header class="letter-header">
+        <div class="letter-chapter-badge" id="modalChapterBadge">Capítulo I</div>
+        <h3 class="letter-title" id="modalLetterTitle">Nuestro Primer Mes</h3>
+        <div class="letter-divider">
+          <i class="fa-solid fa-star"></i>
+          <i class="fa-solid fa-sun"></i>
+          <i class="fa-solid fa-star"></i>
+        </div>
+      </header>
+
+      <!-- Imagen ilustrada de la carta -->
+      <div class="letter-image-container">
+        <img id="modalLetterImg" src="" alt="Ilustración romántica" loading="lazy">
+      </div>
+
+      <!-- Cuerpo poético de la dedicatoria -->
+      <div class="letter-body" id="modalLetterBody">
+        <!-- Rellenado dinámicamente -->
+      </div>
+
+      <!-- Pie con botón de cierre poético -->
+      <footer class="letter-footer">
+        <button class="close-letter-btn" id="closeLetterBtn">
+          <i class="fa-solid fa-heart"></i> Guardar en mi corazón
+        </button>
+      </footer>
+    </article>
+  </div>
+
+  <!-- Script principal de la experiencia -->
+  <script>
+    /* ==========================================================================
+       1. CONFIGURACIÓN CENTRALIZADA (APP_CONFIG)
+       ========================================================================== */
+    const APP_CONFIG = {
+      recipientName: "Paola",
+      senderName: "Ismael",
+      mainTitle: "Nuestro Primer Mes",
+      subTitle: "Paola & Ismael • Nuestro Primer Mes",
+
+      // Enlace de música romántica de fondo
+      audioUrl: "cancion.mp3",
+
+      // Frases poéticas tridimensionales que flotan por la galaxia
+      floatingPhrases: [
+        "Feliz primer mes, Paola",
+        "Siempre juntos",
+        "30 días contigo",
+        "Te amo con toda mi alma",
+        "Luz de mi universo",
+        "Donde estés florezco",
+        "Mi corazón late por ti",
+        "El primero de muchos meses"
+      ],
+
+      // Colección de 7 cartas de amor vinculadas a los girasoles
+      letters: [
+        {
+          id: 1,
+          chapter: "Capítulo I • El Origen",
+          title: "El Día que Iluminaste Todo",
+          image: "https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=1000&q=80",
+          paragraphs: [
+            "Dicen que los astrónomos pasan la vida entera buscando una estrella que eclipse a todas las demás. Yo no tuve que mirar a través de un telescopio; bastó con encontrarte para comprender que todo el brillo del cosmos cabe perfectamente en tu mirada.",
+            "Llegaste como un rayo de sol que desarma la tormenta más densa. Desde aquel primer instante supe que mi universo jamás volvería a ser el mismo, porque en ti encontré el calor que mi alma siempre había esperado.",
+            "Esta primera flor florece en memoria de ese día, hace apenas un mes: el momento exacto en que comprendí que mi hogar tiene tu nombre."
+          ]
+        },
+        {
+          id: 2,
+          chapter: "Capítulo II • Tu Sonrisa",
+          title: "La Melodía de Tu Risa",
+          image: "https://images.unsplash.com/photo-1508615039623-a25605d2b022?auto=format&fit=crop&w=1000&q=80",
+          paragraphs: [
+            "Tu risa tiene un poder curativo que desafía cualquier explicación científica. Hay una magia irresistible en la forma en que tus ojos se achinan cuando estás genuinamente feliz, como si dos soles pequeños nacieran en tus pupilas.",
+            "Cada vez que te escucho reír, el ruido caótico del mundo se apaga por completo. Todo encaja en una sintonía perfecta, como si las galaxias se alinearan solo para celebrar la dicha de verte sonreír.",
+            "Prometo pasar cada uno de mis días buscando la manera de ser el motivo detrás de esa alegría que ilumina hasta mi rincón más oscuro."
+          ]
+        },
+        {
+          id: 3,
+          chapter: "Capítulo III • Nuestros Colores",
+          title: "Un Mes Lleno de Colores",
+          image: "https://images.unsplash.com/photo-1518895949257-7621c3c786d7?auto=format&fit=crop&w=1000&q=80",
+          paragraphs: [
+            "Antes de ti mis días tenían un solo color. Desde hace un mes, cuando empezamos a ser novios, cada día tiene un tono distinto: el rosa de tus risas, el azul de nuestras pláticas, el violeta de tus abrazos.",
+            "Por eso esta galaxia no es de un solo color: es un arcoíris, porque eso eres tú para mí, Paola: la luz que pinta todo lo que toca.",
+            "Hoy, en nuestro primer mes, te entrego una galaxia entera de flores de colores que jamás perderán su brillo."
+          ]
+        },
+        {
+          id: 4,
+          chapter: "Capítulo IV • Complicidad",
+          title: "Bajo el Mismo Cielo",
+          image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1000&q=80",
+          paragraphs: [
+            "Me apasiona la complicidad que hemos construido sin esfuerzo: esas miradas secretas que dicen más que mil poemas, las conversaciones infinitas a medianoche y el confort de saber que puedo ser completamente yo cuando estoy contigo.",
+            "Amar no es simplemente mirarse el uno al otro; es mirar juntos en la misma dirección, soñar proyectos de la mano y saber que no importa cuán empinada sea la colina, nuestras manos jamás se soltarán.",
+            "Gracias por ser mi mejor confidente, mi mayor aventura y la mujer más extraordinaria que la vida pudo regalarme."
+          ]
+        },
+        {
+          id: 5,
+          chapter: "Capítulo V • Tu Esencia",
+          title: "La Belleza de Tu Alma",
+          image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=1000&q=80",
+          paragraphs: [
+            "Es fascinante cómo tu belleza física deslumbra a cualquiera, pero lo verdaderamente hipnotizante es lo que guardas dentro: la ternura de tus manos, la fuerza valiente con la que enfrentas la vida y la bondad infinita de tus sentimientos.",
+            "Eres un ser de luz en un mundo que a veces olvida cómo brillar. Cada detalle tuyo, desde tus manías más tiernas hasta tus pasiones más profundas, me hace admirarte y enamorarme más cada amanecer.",
+            "Paola, eres mi inspiración cotidiana y el poema más hermoso que el destino se atrevió a escribir."
+          ]
+        },
+        {
+          id: 6,
+          chapter: "Capítulo VI • El Futuro",
+          title: "Mil Vidas a Tu Lado",
+          image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1000&q=80",
+          paragraphs: [
+            "Si el tiempo fuera un lienzo infinito, elegiría pintar cada uno de sus segundos a tu lado. No le temo al porvenir porque sé que cualquier camino, si lo recorremos juntos, será un sendero cubierto de girasoles y bendiciones.",
+            "Quiero compartir tus triunfos, abrazarte en tus días difíciles, celebrar cada pequeño logro y envejecer sabiendo que elegí a la persona correcta todos los días de mi existencia.",
+            "No te prometo un mar sin olas, pero sí te prometo que nunca navegarás sola. Siempre seré tu ancla y tu viento favorable."
+          ]
+        },
+        {
+          id: 7,
+          chapter: "Capítulo VII • Eternidad",
+          title: "Mi Amor Infinito",
+          image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1000&q=80",
+          paragraphs: [
+            "En el centro de esta galaxia late un corazón arcoíris que no se detendrá jamás. Así late mi corazón por ti en la vida real: constante, sincero, apasionado y dedicado en cuerpo y alma a hacerte la mujer más feliz de la Tierra.",
+            "Gracias por existir, por elegirme y por llenar mi vida con todos los colores del amor en este primer mes juntos. Esta galaxia es tuya, como mío es el honor de amarte.",
+            "Feliz primer mes, mi amor. Este es solo el comienzo. — Tu novio, Ismael 💖"
+          ]
+        }
+      ]
+    };
+
+    /* ==========================================================================
+       2. GENERADOR DE TEXTURAS Y SPRITES PROCEDURALES DE ALTA RESOLUCIÓN
+       ========================================================================== */
+    class TextureGenerator {
+      /**
+       * Textura del centro botánico de semillas de girasol:
+       * Disco profundo con degradado café chocolate, filotaxis de Fermat y polen dorado en relieve.
+       */
+      static createSunflowerCenterTexture() {
+        const size = 512;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const center = size / 2;
+        const radius = center - 8;
+
+        // Fondo degradado chocolate terciopelo
+        const bg = ctx.createRadialGradient(center, center, 0, center, center, radius);
+        bg.addColorStop(0, '#1c0a02');
+        bg.addColorStop(0.60, '#2e1405');
+        bg.addColorStop(0.85, '#441e08');
+        bg.addColorStop(1, '#5a2a0c');
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        ctx.arc(center, center, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 650 semillas en filotaxis áurea
+        const goldenAngle = 137.50776 * (Math.PI / 180);
+        const florets = 650;
+        const c = (radius - 10) / Math.sqrt(florets);
+
+        for (let i = 0; i < florets; i++) {
+          const r = c * Math.sqrt(i);
+          const theta = i * goldenAngle;
+          const x = center + r * Math.cos(theta);
+          const y = center + r * Math.sin(theta);
+          const normDist = r / radius;
+
+          ctx.beginPath();
+          if (normDist > 0.70) {
+            // Anillo exterior con polen brillante y relieve
+            ctx.arc(x, y, 2.7, 0, Math.PI * 2);
+            ctx.fillStyle = (i % 2 === 0) ? '#ffd54f' : '#ffb300';
+          } else if (normDist > 0.35) {
+            ctx.arc(x, y, 2.3, 0, Math.PI * 2);
+            ctx.fillStyle = (i % 3 === 0) ? '#8d5524' : '#5d3515';
+          } else {
+            ctx.arc(x, y, 1.9, 0, Math.PI * 2);
+            ctx.fillStyle = (i % 2 === 0) ? '#261204' : '#140801';
+          }
+          ctx.fill();
+        }
+
+        // Borde exterior suavemente difuminado
+        ctx.beginPath();
+        ctx.arc(center, center, radius, 0, Math.PI * 2);
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = 'rgba(255, 179, 0, 0.45)';
+        ctx.stroke();
+
+        const tex = new THREE.CanvasTexture(canvas);
+        return tex;
+      }
+
+      /**
+       * Textura botánica de pétalo con gradiente vibrante, curvatura y estrías
+       */
+      static createPetalTexture() {
+        const width = 128;
+        const height = 512;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        // Gradiente botánico: base ámbar ardiente, cuerpo oro girasol puro, puntas iluminadas
+        const grad = ctx.createLinearGradient(64, height, 64, 0);
+        grad.addColorStop(0, '#ff1744');    // Base ámbar caoba
+        grad.addColorStop(0.18, '#ff9100'); // Ámbar cálido
+        grad.addColorStop(0.50, '#00e676'); // Oro girasol intenso
+        grad.addColorStop(0.82, '#2979ff'); // Amarillo puro
+        grad.addColorStop(1, '#d500f9');    // Punta tierna
+
+        ctx.beginPath();
+        ctx.moveTo(64, 12);
+        // Borde derecho con curvatura orgánica
+        ctx.bezierCurveTo(126, 110, 118, 390, 64, 502);
+        // Borde izquierdo
+        ctx.bezierCurveTo(10, 390, 2, 110, 64, 12);
+        ctx.closePath();
+
+        ctx.fillStyle = grad;
+        ctx.shadowColor = 'rgba(0,0,0,0.35)';
+        ctx.shadowBlur = 4;
+        ctx.fill();
+
+        // Nervadura central prominente
+        ctx.beginPath();
+        ctx.moveTo(64, 25);
+        ctx.lineTo(64, 485);
+        ctx.strokeStyle = 'rgba(191, 54, 12, 0.4)';
+        ctx.lineWidth = 2.2;
+        ctx.shadowBlur = 0;
+        ctx.stroke();
+
+        // Estrías laterales botánicas
+        for (let y = 70; y < 450; y += 35) {
+          ctx.beginPath();
+          ctx.moveTo(64, y);
+          ctx.lineTo(36, y + 26);
+          ctx.moveTo(64, y);
+          ctx.lineTo(92, y + 26);
+          ctx.strokeStyle = 'rgba(230, 81, 0, 0.18)';
+          ctx.lineWidth = 1.1;
+          ctx.stroke();
+        }
+
+        const tex = new THREE.CanvasTexture(canvas);
+        return tex;
+      }
+
+      /**
+       * Textura de hoja verde de girasol con nervaduras
+       */
+      static createLeafTexture() {
+        const width = 256;
+        const height = 512;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        const grad = ctx.createLinearGradient(128, height, 128, 0);
+        grad.addColorStop(0, '#1b5e20');
+        grad.addColorStop(0.5, '#2e7d32');
+        grad.addColorStop(1, '#43a047');
+
+        ctx.beginPath();
+        ctx.moveTo(128, 15);
+        ctx.bezierCurveTo(245, 130, 248, 380, 128, 500);
+        ctx.bezierCurveTo(8, 380, 11, 130, 128, 15);
+        ctx.closePath();
+
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Nervadura central
+        ctx.beginPath();
+        ctx.moveTo(128, 25);
+        ctx.lineTo(128, 490);
+        ctx.strokeStyle = '#81c784';
+        ctx.lineWidth = 3.5;
+        ctx.stroke();
+
+        // Nervaduras secundarias
+        ctx.strokeStyle = 'rgba(129, 199, 132, 0.55)';
+        ctx.lineWidth = 1.8;
+        for (let y = 90; y < 450; y += 48) {
+          ctx.beginPath();
+          ctx.moveTo(128, y);
+          ctx.lineTo(55, y - 28);
+          ctx.moveTo(128, y);
+          ctx.lineTo(201, y - 28);
+          ctx.stroke();
+        }
+
+        const tex = new THREE.CanvasTexture(canvas);
+        return tex;
+      }
+
+      static createGlowParticleTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 128;
+        canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        const center = 64;
+
+        const grad = ctx.createRadialGradient(center, center, 0, center, center, 64);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        grad.addColorStop(0.2, 'rgba(255, 235, 130, 0.9)');
+        grad.addColorStop(0.5, 'rgba(255, 193, 7, 0.35)');
+        grad.addColorStop(0.8, 'rgba(255, 143, 0, 0.1)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 128, 128);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        return tex;
+      }
+
+      /**
+       * Etiqueta elegante y nítida para cada capítulo (optimizada para lectura y clics móviles)
+       */
+      static createChapterLabel(text) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 420;
+        canvas.height = 96;
+        const ctx = canvas.getContext('2d');
+
+        // Cápsula de vidrio oscuro con borde dorado brillante
+        ctx.fillStyle = 'rgba(14, 8, 26, 0.88)';
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.85)';
+        ctx.lineWidth = 3.0;
+
+        const x = 10, y = 10, w = 400, h = 76, r = 38;
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Tipografía dorada Cinzel con ícono floral
+        ctx.font = '700 25px "Cinzel", serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffd700';
+        ctx.shadowColor = 'rgba(255, 215, 0, 0.85)';
+        ctx.shadowBlur = 10;
+        ctx.fillText(`🌻 ${text}`, 210, 48);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        return tex;
+      }
+
+      static createTextBillboard(text) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 18;
+        ctx.font = '600 40px "Dancing Script", cursive';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(text, 256, 64);
+
+        ctx.shadowBlur = 0;
+        ctx.font = '600 40px "Dancing Script", cursive';
+        ctx.fillStyle = '#fff3a0';
+        ctx.fillText(text, 256, 64);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        return tex;
+      }
+    }
+
+    /* ==========================================================================
+       3. CONSTRUCTOR DE GIRASOLES 3D BOTÁNICOS REALISTAS CON TRIPLE CAPA
+       ========================================================================== */
+    class BotanicalSunflowerBuilder {
+      constructor(petalTexture, centerTexture, leafTexture) {
+        this.petalTexture = petalTexture;
+        this.centerTexture = centerTexture;
+        this.leafTexture = leafTexture;
+
+        // Material del centro de semillas (con iluminación real para relieve 3D)
+        this.centerMaterial = new THREE.MeshStandardMaterial({
+          map: this.centerTexture,
+          roughness: 0.82,
+          metalness: 0.05
+        });
+
+        // Material de los pétalos con calidez, saturación oro y sutil brillo
+        this.petalMaterial = new THREE.MeshStandardMaterial({
+          map: this.petalTexture,
+          transparent: true,
+          side: THREE.DoubleSide,
+          roughness: 0.38,
+          metalness: 0.12,
+          emissive: 0x3d1c00,
+          emissiveIntensity: 0.18,
+          alphaTest: 0.08
+        });
+
+        this.leafMaterial = new THREE.MeshStandardMaterial({
+          map: this.leafTexture,
+          transparent: true,
+          side: THREE.DoubleSide,
+          roughness: 0.60,
+          metalness: 0.05,
+          alphaTest: 0.1
+        });
+
+        this.stemMaterial = new THREE.MeshStandardMaterial({
+          color: 0x2e7d32,
+          roughness: 0.65,
+          metalness: 0.05
+        });
+
+        this.sepalMaterial = new THREE.MeshStandardMaterial({
+          color: 0x1b5e20,
+          roughness: 0.8,
+          side: THREE.DoubleSide
+        });
+      }
+
+      /**
+       * Construye un girasol botánico 3D hiperrealista con pétalos radiantes en abanico
+       */
+      buildSunflower(scale = 1.0) {
+        const flowerGroup = new THREE.Group();
+
+        // 1. TALLO BOTÁNICO CURVADO
+        const stemCurve = new THREE.CatmullRomCurve3([
+          new THREE.Vector3(0, -7.0, 0),
+          new THREE.Vector3(0.7, -3.8, 0.4),
+          new THREE.Vector3(0.2, -0.6, 0.2),
+          new THREE.Vector3(0, 2.0, 0.5)
+        ]);
+        const stemGeo = new THREE.TubeGeometry(stemCurve, 20, 0.28, 8, false);
+        const stemMesh = new THREE.Mesh(stemGeo, this.stemMaterial);
+        flowerGroup.add(stemMesh);
+
+        // 2. HOJAS VERDES AMPLIAS Y REALISTAS
+        const leafGeo = new THREE.PlaneGeometry(2.8, 4.6);
+
+        // Hoja derecha
+        const leafRight = new THREE.Mesh(leafGeo, this.leafMaterial);
+        leafRight.position.set(1.6, -2.4, 0.8);
+        leafRight.rotation.set(0.4, 0.5, -0.6);
+        flowerGroup.add(leafRight);
+
+        // Hoja izquierda
+        const leafLeft = new THREE.Mesh(leafGeo, this.leafMaterial);
+        leafLeft.position.set(-1.5, -4.2, 0.2);
+        leafLeft.rotation.set(-0.3, -0.4, 0.7);
+        flowerGroup.add(leafLeft);
+
+        // 3. CABEZA DEL GIRASOL
+        const headGroup = new THREE.Group();
+        headGroup.position.set(0, 2.0, 0.5);
+        // Inclinada 45° hacia arriba y al frente para lucir su rostro en su máxima expresión
+        headGroup.rotation.x = -Math.PI / 4.0;
+
+        // A. Cáliz posterior con sépalos verdes
+        const sepalCount = 20;
+        const sepalGeo = new THREE.ConeGeometry(0.4, 2.0, 4);
+        sepalGeo.translate(0, 1.0, 0); // Base en el origen, apunta hacia afuera en +Y
+        for (let i = 0; i < sepalCount; i++) {
+          const sepalMesh = new THREE.Mesh(sepalGeo, this.sepalMaterial);
+          const angle = (i * Math.PI * 2) / sepalCount;
+          sepalMesh.position.set(1.5 * Math.cos(angle), 1.5 * Math.sin(angle), -0.28);
+          sepalMesh.rotation.z = angle - Math.PI / 2;
+          sepalMesh.rotateOnAxis(new THREE.Vector3(1, 0, 0), -0.32);
+          headGroup.add(sepalMesh);
+        }
+
+        // B. Capa 1 de pétalos exteriores: 28 pétalos grandes con curvatura en abanico
+        const petalOuterCount = 28;
+        const petalOuterGeo = new THREE.PlaneGeometry(1.42, 5.2);
+        petalOuterGeo.translate(0, 2.6, 0); // Base en (0,0,0), punta en +Y
+
+        for (let i = 0; i < petalOuterCount; i++) {
+          const petal = new THREE.Mesh(petalOuterGeo, this.petalMaterial);
+          const angle = (i * Math.PI * 2) / petalOuterCount;
+          petal.position.set(1.6 * Math.cos(angle), 1.6 * Math.sin(angle), -0.06);
+          petal.rotation.z = angle - Math.PI / 2;
+          // Curvar sutilmente hacia atrás
+          const tiltJitter = -0.20 + (Math.random() - 0.5) * 0.04;
+          petal.rotateOnAxis(new THREE.Vector3(1, 0, 0), tiltJitter);
+          headGroup.add(petal);
+        }
+
+        // C. Capa 2 de pétalos medios: 26 pétalos escalonados
+        const petalMidCount = 26;
+        const petalMidGeo = new THREE.PlaneGeometry(1.32, 4.6);
+        petalMidGeo.translate(0, 2.3, 0);
+
+        for (let i = 0; i < petalMidCount; i++) {
+          const petal = new THREE.Mesh(petalMidGeo, this.petalMaterial);
+          const angle = (i * Math.PI * 2) / petalMidCount + (Math.PI / petalMidCount);
+          petal.position.set(1.45 * Math.cos(angle), 1.45 * Math.sin(angle), 0.05);
+          petal.rotation.z = angle - Math.PI / 2;
+          const tiltJitter = -0.06 + (Math.random() - 0.5) * 0.04;
+          petal.rotateOnAxis(new THREE.Vector3(1, 0, 0), tiltJitter);
+          headGroup.add(petal);
+        }
+
+        // D. Capa 3 de pétalos interiores: 22 florecillas que abrazan el disco de semillas
+        const petalInnerCount = 22;
+        const petalInnerGeo = new THREE.PlaneGeometry(1.15, 3.5);
+        petalInnerGeo.translate(0, 1.75, 0);
+
+        for (let i = 0; i < petalInnerCount; i++) {
+          const petal = new THREE.Mesh(petalInnerGeo, this.petalMaterial);
+          const angle = (i * Math.PI * 2) / petalInnerCount + (Math.PI / (petalInnerCount * 2));
+          petal.position.set(1.25 * Math.cos(angle), 1.25 * Math.sin(angle), 0.16);
+          petal.rotation.z = angle - Math.PI / 2;
+          const tiltJitter = 0.10 + (Math.random() - 0.5) * 0.04; // Cupping hacia adentro
+          petal.rotateOnAxis(new THREE.Vector3(1, 0, 0), tiltJitter);
+          headGroup.add(petal);
+        }
+
+        // E. Disco de semillas central abombado en 3D
+        const discGeo = new THREE.CylinderGeometry(1.65, 1.55, 0.42, 36);
+        discGeo.rotateX(Math.PI / 2);
+        const discMesh = new THREE.Mesh(discGeo, this.centerMaterial);
+        discMesh.position.set(0, 0, 0.22);
+        headGroup.add(discMesh);
+
+        flowerGroup.add(headGroup);
+
+        flowerGroup.scale.set(scale, scale, scale);
+
+        return {
+          rootGroup: flowerGroup,
+          headGroup: headGroup
+        };
+      }
+    }
+
+    /* ==========================================================================
+       4. GESTOR DE AUDIO DOBLE (Música Romántica + Sintetizador de Respaldo)
+       ========================================================================== */
+    class RomanceAudioManager {
+      constructor(audioUrl) {
+        this.audioUrl = audioUrl;
+        this.isPlaying = false;
+        this.audioElement = new Audio();
+        this.audioElement.src = audioUrl;
+        this.audioElement.loop = true;
+        if (audioUrl.startsWith("http")) { this.audioElement.crossOrigin = "anonymous"; }
+        this.audioElement.volume = 0.75;
+
+        this.synthActive = false;
+        this.audioCtx = null;
+        this.synthTimer = null;
+
+        this.audioElement.addEventListener('error', () => {
+          console.warn('Audio externo no accesible. Activando Sintetizador Romántico Web Audio API.');
+          if (this.isPlaying) {
+            this.startRomanticSynth();
+          }
+        });
+      }
+
+      initAudioContext() {
+        if (!this.audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            this.audioCtx = new AudioContextClass();
+          }
+        }
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume();
+        }
+      }
+
+      toggle() {
+        if (this.isPlaying) {
+          this.pause();
+        } else {
+          this.play();
+        }
+        return this.isPlaying;
+      }
+
+      play() {
+        this.initAudioContext();
+        this.isPlaying = true;
+
+        const playPromise = this.audioElement.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.warn('Reproducción de audio nativo prevenida. Activando sintetizador de respaldo:', err);
+            this.startRomanticSynth();
+          });
+        }
+        this.updateUI(true);
+      }
+
+      pause() {
+        this.isPlaying = false;
+        this.audioElement.pause();
+        this.stopRomanticSynth();
+        this.updateUI(false);
+      }
+
+      startRomanticSynth() {
+        if (this.synthActive || !this.audioCtx) return;
+        this.synthActive = true;
+
+        const chords = [
+          [261.63, 329.63, 392.00, 493.88], // Cmaj7
+          [220.00, 261.63, 329.63, 392.00], // Am7
+          [174.61, 261.63, 329.63, 440.00], // Fmaj7
+          [196.00, 293.66, 392.00, 440.00]  // Gsus4
+        ];
+
+        let chordIndex = 0;
+        let noteIndex = 0;
+
+        const playChime = () => {
+          if (!this.synthActive || !this.audioCtx) return;
+
+          const chord = chords[chordIndex];
+          const freq = chord[noteIndex % chord.length] * (noteIndex % 2 === 0 ? 1 : 1.5);
+
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          const filter = this.audioCtx.createBiquadFilter();
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(1200, this.audioCtx.currentTime);
+
+          gain.gain.setValueAtTime(0.001, this.audioCtx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.08, this.audioCtx.currentTime + 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 2.2);
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.audioCtx.destination);
+
+          osc.start();
+          osc.stop(this.audioCtx.currentTime + 2.3);
+
+          noteIndex++;
+          if (noteIndex >= 8) {
+            noteIndex = 0;
+            chordIndex = (chordIndex + 1) % chords.length;
+          }
+
+          const delay = (noteIndex % 2 === 0) ? 450 : 650;
+          this.synthTimer = setTimeout(playChime, delay);
+        };
+
+        playChime();
+      }
+
+      stopRomanticSynth() {
+        this.synthActive = false;
+        if (this.synthTimer) {
+          clearTimeout(this.synthTimer);
+          this.synthTimer = null;
+        }
+      }
+
+      updateUI(playing) {
+        const vinyl = document.getElementById('vinylDisc');
+        const waves = document.getElementById('soundWaves');
+        if (playing) {
+          vinyl.classList.add('playing');
+          waves.classList.add('active');
+        } else {
+          vinyl.classList.remove('playing');
+          waves.classList.remove('active');
+        }
+      }
+    }
+
+    /* ==========================================================================
+       5. ESCENARIO Y UNIVERSO 3D: GALAXIA EN FORMA DE CORAZÓN
+       ========================================================================== */
+    class CosmicGalaxyExperience {
+      constructor() {
+        this.canvas = document.getElementById('webglCanvas');
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.controls = null;
+        this.clock = new THREE.Clock();
+
+        this.galaxyPoints = null;
+        this.heartGroup = null;
+        this.heartParticles = null;
+        this.heartLight = null;
+        this.sunflowerObjects = [];
+        this.petalsArray = [];
+        this.floatingTextSprites = [];
+        this.cosmicStreamPetals = [];
+        this.nebulaAuraGroup = null;
+
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2(-999, -999);
+        this.hoveredSunflower = null;
+        this.isCinematicFlightActive = false;
+        this.focusedFlower = null;
+
+        // Texturas
+        this.glowTexture = TextureGenerator.createGlowParticleTexture();
+        this.centerTexture = TextureGenerator.createSunflowerCenterTexture();
+        this.petalTexture = TextureGenerator.createPetalTexture();
+        this.leafTexture = TextureGenerator.createLeafTexture();
+
+        // Constructor botánico
+        this.flowerBuilder = new BotanicalSunflowerBuilder(
+          this.petalTexture,
+          this.centerTexture,
+          this.leafTexture
+        );
+
+        this.audioManager = new RomanceAudioManager(APP_CONFIG.audioUrl);
+
+        this.init();
+      }
+
+      init() {
+        this.setupScene();
+        this.setupCameraAndControls();
+        this.setupLighting();
+        this.buildDeepSpaceStars();
+        this.buildHeartShapedGalaxy();
+        this.buildParametricBeatingHeart();
+        this.buildOrbitingBotanicalSunflowers();
+        this.buildFloatingPhrases();
+        this.buildForegroundPetalRain();
+        this.buildCosmicNebulaAura();
+        this.buildCosmicPetalStreams();
+        this.setupEventListeners();
+        this.animate();
+      }
+
+      setupScene() {
+        this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.FogExp2(0x070410, 0.0032);
+
+        this.renderer = new THREE.WebGLRenderer({
+          canvas: this.canvas,
+          antialias: false,
+          alpha: true,
+          powerPreference: "high-performance"
+        });
+        this.renderer.setSize(this.width, this.height);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.35;
+      }
+
+      setupCameraAndControls() {
+        this.camera = new THREE.PerspectiveCamera(50, this.width / this.height, 0.1, 1500);
+
+        // Vista elevada a 55° para apreciar tanto el corazón cósmico como los girasoles 3D
+        this.initialCameraPos = new THREE.Vector3(0, 88, 70);
+        this.initialTargetPos = new THREE.Vector3(0, 0, 0);
+
+        this.camera.position.copy(this.initialCameraPos);
+
+        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+        this.controls.minDistance = 15;
+        this.controls.maxDistance = 240;
+        this.controls.maxPolarAngle = Math.PI * 0.85;
+        this.controls.minPolarAngle = 0.05;
+        this.controls.target.copy(this.initialTargetPos);
+      }
+
+      setupLighting() {
+        const ambientLight = new THREE.AmbientLight(0xfff5e6, 0.8);
+        this.scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xfffae0, 1.4);
+        dirLight.position.set(30, 80, 40);
+        this.scene.add(dirLight);
+
+        const backLight = new THREE.DirectionalLight(0x7c4dff, 0.9);
+        backLight.position.set(-30, -20, -30);
+        this.scene.add(backLight);
+      }
+
+      buildDeepSpaceStars() {
+        const starCount = 2000;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(starCount * 3);
+        const colors = new Float32Array(starCount * 3);
+
+        const starColors = [
+          new THREE.Color('#ffffff'),
+          new THREE.Color('#ff80ab'),
+          new THREE.Color('#b388ff'),
+          new THREE.Color('#80d8ff'),
+          new THREE.Color('#b9f6ca'),
+          new THREE.Color('#ffe57f')
+        ];
+
+        for (let i = 0; i < starCount; i++) {
+          const radius = 320 + Math.random() * 550;
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.acos(Math.random() * 2 - 1);
+
+          positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+          positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+          positions[i * 3 + 2] = radius * Math.cos(phi);
+
+          const col = starColors[Math.floor(Math.random() * starColors.length)];
+          colors[i * 3] = col.r;
+          colors[i * 3 + 1] = col.g;
+          colors[i * 3 + 2] = col.b;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({
+          size: 1.8,
+          vertexColors: true,
+          map: this.glowTexture,
+          transparent: true,
+          opacity: 0.75,
+          blending: THREE.NormalBlending,
+          depthWrite: false
+        });
+
+        const starField = new THREE.Points(geometry, material);
+        this.scene.add(starField);
+      }
+
+      /**
+       * Galaxia en forma de corazón cósmico (más de 16,500 partículas)
+       */
+      buildHeartShapedGalaxy() {
+        const particleCount = 9000;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+
+        const colWhite = new THREE.Color('#ffffff');
+        const colGoldLight = new THREE.Color('#fff59d');
+        const colGold = new THREE.Color('#ffd700');
+        const colSunflower = new THREE.Color('#ffc107');
+        const colAmber = new THREE.Color('#ff8f00');
+        const colDeepAmber = new THREE.Color('#e65100');
+
+        const baseScale = 2.65;
+
+        for (let i = 0; i < particleCount; i++) {
+          const t = (Math.random() * 2 - 1) * Math.PI;
+          const s = Math.pow(Math.random(), 0.88) * 0.92 + 0.08;
+
+          const hx = 16 * Math.pow(Math.sin(t), 3);
+          const hz = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+
+          const x0 = hx * s * baseScale;
+          const z0 = hz * s * baseScale;
+
+          const twist = 0.32 * (1.0 - s);
+          const cosTwist = Math.cos(twist);
+          const sinTwist = Math.sin(twist);
+
+          const scatter = 0.9 * s;
+          const rx = (Math.random() + Math.random() - 1.0) * scatter;
+          const rz = (Math.random() + Math.random() - 1.0) * scatter;
+          const ry = (Math.random() + Math.random() - 1.0) * (9.0 * Math.exp(-s * 2.8) + 1.2);
+
+          const px = (x0 * cosTwist - z0 * sinTwist) + rx;
+          const py = ry;
+          const pz = (x0 * sinTwist + z0 * cosTwist) + rz;
+
+          positions[i * 3] = px;
+          positions[i * 3 + 1] = py;
+          positions[i * 3 + 2] = pz;
+
+          let pColor = new THREE.Color().setHSL(((t / (2 * Math.PI)) + 0.5 + s * 0.25) % 1, 1.0, 0.55);
+
+          if (Math.random() < 0.12) {
+            pColor.offsetHSL(0, 0, 0.1);
+          }
+
+          colors[i * 3] = pColor.r;
+          colors[i * 3 + 1] = pColor.g;
+          colors[i * 3 + 2] = pColor.b;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({
+          size: 2.2,
+          vertexColors: true,
+          map: this.glowTexture,
+          transparent: true,
+          opacity: 0.75,
+          blending: THREE.NormalBlending,
+          depthWrite: false
+        });
+
+        this.galaxyPoints = new THREE.Points(geometry, material);
+        this.scene.add(this.galaxyPoints);
+      }
+
+      buildParametricBeatingHeart() {
+        this.heartGroup = new THREE.Group();
+        const heartCount = 3000;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(heartCount * 3);
+        const colors = new Float32Array(heartCount * 3);
+
+        const colCore = new THREE.Color('#ffffff');
+        const colGold = new THREE.Color('#ffd700');
+        const colAmber = new THREE.Color('#ff8f00');
+
+        let index = 0;
+        while (index < heartCount) {
+          const t = (Math.random() * 2 - 1) * Math.PI;
+          const phi = (Math.random() * 2 - 1) * (Math.PI / 2);
+          const r = Math.pow(Math.random(), 0.55);
+
+          const hx = 16 * Math.pow(Math.sin(t), 3);
+          const hy = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+          const thickness = 6.2 * Math.pow(Math.sin(Math.abs(t)), 1.3) * Math.cos(phi);
+          const hz = thickness * (Math.random() * 2 - 1);
+
+          const scale = 0.48;
+          const px = hx * r * scale;
+          const py = hy * r * scale;
+          const pz = hz * r * scale;
+
+          positions[index * 3] = px;
+          positions[index * 3 + 1] = py;
+          positions[index * 3 + 2] = pz;
+
+          const dist = Math.sqrt(px * px + py * py + pz * pz) / 8.0;
+          const pColor = colCore.clone().lerp(new THREE.Color().setHSL(((Math.atan2(py, px) / (2 * Math.PI) + 0.5) * 2 + dist) % 1, 1.0, 0.5), Math.min(0.5 + dist * 1.4, 1));
+
+          colors[index * 3] = pColor.r;
+          colors[index * 3 + 1] = pColor.g;
+          colors[index * 3 + 2] = pColor.b;
+
+          index++;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({
+          size: 2.6,
+          vertexColors: true,
+          map: this.glowTexture,
+          transparent: true,
+          opacity: 0.95,
+          blending: THREE.NormalBlending,
+          depthWrite: false
+        });
+
+        this.heartParticles = new THREE.Points(geometry, material);
+        this.heartGroup.add(this.heartParticles);
+
+        const auraMat = new THREE.SpriteMaterial({
+          map: this.glowTexture,
+          color: 0xff6ec7,
+          transparent: true,
+          opacity: 0.5,
+          blending: THREE.AdditiveBlending
+        });
+        const auraSprite = new THREE.Sprite(auraMat);
+        auraSprite.scale.set(20, 20, 1);
+        this.heartGroup.add(auraSprite);
+
+        this.heartLight = new THREE.PointLight(0xff6ec7, 3.5, 55);
+        this.heartGroup.add(this.heartLight);
+
+        this.scene.add(this.heartGroup);
+      }
+
+      /**
+       * Girasoles botánicos 3D con área táctil (hitbox) ampliada para móviles
+       */
+      buildOrbitingBotanicalSunflowers() {
+        const count = APP_CONFIG.letters.length;
+        const heartAngles = [
+          -Math.PI * 0.75, // Lóbulo superior izquierdo
+          -Math.PI * 0.45, // Borde medio izquierdo
+          -Math.PI * 0.15, // Cerca de hendidura superior
+          Math.PI * 0.15,  // Hendidura superior derecha
+          Math.PI * 0.45,  // Borde medio derecho
+          Math.PI * 0.75,  // Lóbulo superior derecho
+          Math.PI * 0.98   // Punta inferior del corazón
+        ];
+
+        const heartScales = [3.35, 3.45, 3.25, 3.25, 3.45, 3.35, 3.50];
+        const orbitalSpeeds = [0.08, -0.07, 0.09, -0.08, 0.07, -0.09, 0.06];
+        const heightOffsets = [2, -2, 3, -1, 2, -3, 1];
+
+        for (let i = 0; i < count; i++) {
+          const letterData = APP_CONFIG.letters[i];
+
+          const sunflowerModel = this.flowerBuilder.buildSunflower(1.2);
+          const flowerGroup = sunflowerModel.rootGroup;
+
+          // Hitbox amplia optimizada para toque con dedo en pantallas móviles (Radio 7.0)
+          const hitGeo = new THREE.SphereGeometry(7.0, 12, 12);
+          const hitMat = new THREE.MeshBasicMaterial({
+            visible: false,
+            depthWrite: false
+          });
+          const hitSphere = new THREE.Mesh(hitGeo, hitMat);
+          hitSphere.position.set(0, 2.5, 0);
+          hitSphere.userData = {
+            isSunflower: true,
+            index: i,
+            flowerGroup: flowerGroup,
+            letterData: letterData
+          };
+          flowerGroup.add(hitSphere);
+
+          // Etiqueta flotante con ícono de girasol
+          const chapterTexture = TextureGenerator.createChapterLabel(`CAPÍTULO ${i + 1}`);
+          const labelMat = new THREE.SpriteMaterial({
+            map: chapterTexture,
+            transparent: true,
+            opacity: 0.96
+          });
+          const labelSprite = new THREE.Sprite(labelMat);
+          labelSprite.scale.set(9.0, 2.1, 1);
+          labelSprite.position.set(0, 6.8, 0);
+          labelSprite.userData = {
+            isSunflower: true,
+            index: i,
+            flowerGroup: flowerGroup,
+            letterData: letterData
+          };
+          flowerGroup.add(labelSprite);
+
+          const initialAngle = heartAngles[i % heartAngles.length];
+          const initS = heartScales[i % heartScales.length];
+          const initHx = 16 * Math.pow(Math.sin(initialAngle), 3) * initS;
+          const initHz = -(13 * Math.cos(initialAngle) - 5 * Math.cos(2 * initialAngle) - 2 * Math.cos(3 * initialAngle) - Math.cos(4 * initialAngle)) * initS;
+          flowerGroup.position.set(initHx, heightOffsets[i % heightOffsets.length], initHz);
+
+          const orbitalData = {
+            group: flowerGroup,
+            headGroup: sunflowerModel.headGroup,
+            // chispas eliminadas para mantener la flor 100% limpia y nítida
+            hitMesh: hitSphere,
+            labelSprite: labelSprite,
+            scaleHeart: heartScales[i % heartScales.length],
+            speed: orbitalSpeeds[i % orbitalSpeeds.length],
+            heightOffset: heightOffsets[i % heightOffsets.length],
+            currentAngle: initialAngle,
+            data: letterData
+          };
+
+          this.sunflowerObjects.push(orbitalData);
+          this.scene.add(flowerGroup);
+        }
+      }
+
+      buildFloatingPhrases() {
+        const phrases = APP_CONFIG.floatingPhrases;
+        const phraseAngles = [
+          -Math.PI * 0.85,
+          -Math.PI * 0.55,
+          -Math.PI * 0.25,
+          0,
+          Math.PI * 0.35,
+          Math.PI * 0.65,
+          Math.PI * 0.95,
+          -Math.PI * 0.05
+        ];
+        const phraseScales = [3.85, 4.05, 3.75, 3.95, 4.05, 3.85, 4.15, 3.75];
+
+        for (let i = 0; i < phrases.length; i++) {
+          const phrase = phrases[i];
+          const texture = TextureGenerator.createTextBillboard(phrase);
+
+          const mat = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            opacity: 0.85,
+            blending: THREE.AdditiveBlending
+          });
+
+          const sprite = new THREE.Sprite(mat);
+          sprite.scale.set(16, 4, 1);
+
+          const angle = phraseAngles[i % phraseAngles.length];
+          const s = phraseScales[i % phraseScales.length];
+          const hx = 16 * Math.pow(Math.sin(angle), 3) * s;
+          const hz = -(13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle)) * s;
+          const y = (i % 2 === 0 ? 8 : -8);
+
+          sprite.position.set(hx, y, hz);
+
+          this.floatingTextSprites.push({
+            sprite: sprite,
+            baseY: y,
+            angle: angle,
+            scaleHeart: s,
+            speed: 0.03 * (i % 2 === 0 ? 1 : -1),
+            phase: Math.random() * Math.PI * 2
+          });
+
+          this.scene.add(sprite);
+        }
+      }
+
+      buildForegroundPetalRain() {
+        const petalCount = 35;
+        const geometry = new THREE.PlaneGeometry(1.6, 3.2, 2, 2);
+
+        const posAttr = geometry.attributes.position;
+        for (let i = 0; i < posAttr.count; i++) {
+          const x = posAttr.getX(i);
+          posAttr.setZ(i, (1 - (x * x) / 1.0) * 0.25);
+        }
+        geometry.computeVertexNormals();
+
+        const material = new THREE.MeshBasicMaterial({
+          map: this.petalTexture,
+          transparent: true,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+          opacity: 0.85
+        });
+
+        for (let i = 0; i < petalCount; i++) {
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.set(
+            (Math.random() - 0.5) * 100,
+            (Math.random() - 0.5) * 80,
+            (Math.random() - 0.5) * 100
+          );
+          mesh.rotation.set(
+            Math.random() * Math.PI,
+            Math.random() * Math.PI,
+            Math.random() * Math.PI
+          );
+
+          const scale = 0.55 + Math.random() * 0.65;
+          mesh.scale.set(scale, scale, scale);
+
+          this.petalsArray.push({
+            mesh: mesh,
+            speedY: 0.07 + Math.random() * 0.11,
+            rotSpeedX: (Math.random() - 0.5) * 0.025,
+            rotSpeedY: (Math.random() - 0.5) * 0.035,
+            rotSpeedZ: (Math.random() - 0.5) * 0.025,
+            wobbleSpeed: 0.8 + Math.random() * 1.5,
+            wobbleDist: 0.04 + Math.random() * 0.06,
+            phase: Math.random() * Math.PI * 2
+          });
+
+          this.scene.add(mesh);
+        }
+      }
+
+      /* ========================================================================
+         SISTEMA TÁCTIL Y DE RATÓN MULTIPLATAFORMA
+         Soluciona el problema de clics en teléfonos móviles mediante tracking de toques.
+         ======================================================================== */
+      /**
+ * 1. NEBULOSA CÓSMICA DE FONDO:
+ * Nubes de luz suave en tonos ámbar, violeta cósmico y oro para eliminar el vacío oscuro
+ */
+      buildCosmicNebulaAura() {
+        this.nebulaAuraGroup = new THREE.Group();
+        const nebulaColors = [
+          0x2a1447, // Violeta cósmico profundo
+          0xff4081, // Rosa
+          0x1b0a33, // Púrpura noche
+          0x00b0ff, // Azul
+          0x3e1f58  // Amatista suave
+        ];
+
+        const count = 12;
+        for (let i = 0; i < count; i++) {
+          const mat = new THREE.SpriteMaterial({
+            map: this.glowTexture,
+            color: nebulaColors[i % nebulaColors.length],
+            transparent: true,
+            opacity: 0.16,
+            blending: THREE.AdditiveBlending
+          });
+
+          const sprite = new THREE.Sprite(mat);
+          const angle = (i * Math.PI * 2) / count + (Math.random() - 0.5) * 0.4;
+          const radius = 60 + (i % 3) * 22;
+          const y = (Math.random() - 0.5) * 25;
+
+          sprite.position.set(radius * Math.cos(angle), y, radius * Math.sin(angle));
+          const scale = 55 + Math.random() * 45;
+          sprite.scale.set(scale, scale, 1);
+
+          this.nebulaAuraGroup.add(sprite);
+        }
+
+        this.scene.add(this.nebulaAuraGroup);
+      }
+
+      /**
+       * 3. RÍO CÓSMICO DE PÉTALOS DORADOS GIRATORIOS:
+       * 160 pétalos en espirales orbitales que fluyen como un manto de luz enmarcando el corazón
+       */
+      buildCosmicPetalStreams() {
+        const streamCount = 80;
+        const geometry = new THREE.PlaneGeometry(1.5, 3.0, 2, 2);
+
+        const posAttr = geometry.attributes.position;
+        for (let i = 0; i < posAttr.count; i++) {
+          const x = posAttr.getX(i);
+          posAttr.setZ(i, (1 - (x * x) / 1.0) * 0.25);
+        }
+        geometry.computeVertexNormals();
+
+        const material = new THREE.MeshBasicMaterial({
+          map: this.petalTexture,
+          transparent: true,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+          opacity: 0.88
+        });
+
+        for (let i = 0; i < streamCount; i++) {
+          const mesh = new THREE.Mesh(geometry, material);
+
+          // Dispersión en espiral amplia desde escala 3.1 hasta 6.0
+          const s = 3.2 + Math.pow(Math.random(), 0.9) * 2.8;
+          const t = Math.random() * Math.PI * 2;
+          const speed = (0.03 + (s / 6.0) * 0.05) * (i % 2 === 0 ? 1 : -1);
+
+          const scale = 0.5 + Math.random() * 0.5;
+          mesh.scale.set(scale, scale, scale);
+
+          // Posición inicial inmediata en el halo exterior en forma de corazón (escala 3.5 a 5.8)
+          const hx = 16 * Math.pow(Math.sin(t), 3) * s;
+          const hz = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * s;
+          const y = (Math.random() - 0.5) * 16;
+          mesh.position.set(hx, y, hz);
+
+          this.cosmicStreamPetals.push({
+            mesh: mesh,
+            t: t,
+            scaleHeart: s,
+            speed: speed,
+            heightOffset: (Math.random() - 0.5) * 16,
+            rotSpeedX: (Math.random() - 0.5) * 0.03,
+            rotSpeedY: (Math.random() - 0.5) * 0.04,
+            rotSpeedZ: (Math.random() - 0.5) * 0.03,
+            wobbleSpeed: 1.2 + Math.random() * 1.5,
+            phase: Math.random() * Math.PI * 2
+          });
+
+          this.scene.add(mesh);
+        }
+      }
+
+      setupEventListeners() {
+        window.addEventListener('resize', () => this.onWindowResize());
+
+        // Hover en escritorio
+        window.addEventListener('pointermove', (e) => {
+          if (e.pointerType === 'mouse') {
+            this.onPointerMove(e);
+          }
+        });
+
+        // Tracking preciso de pulsaciones táctiles / clics
+        let startX = 0;
+        let startY = 0;
+        let startTime = 0;
+
+        const onPointerDown = (e) => {
+          startX = e.clientX;
+          startY = e.clientY;
+          startTime = performance.now();
+        };
+
+        const onPointerUp = (e) => {
+          const deltaX = Math.abs(e.clientX - startX);
+          const deltaY = Math.abs(e.clientY - startY);
+          const duration = performance.now() - startTime;
+
+          // Si el desplazamiento fue menor a 14 píxeles y duró menos de 450ms, es un toque genuino (TAP)
+          if (deltaX < 14 && deltaY < 14 && duration < 450) {
+            this.handleDirectTap(e.clientX, e.clientY);
+          }
+        };
+
+        // Escuchar tanto pointer como touch para compatibilidad universal absoluta
+        this.canvas.addEventListener('pointerdown', onPointerDown, { passive: true });
+        this.canvas.addEventListener('pointerup', onPointerUp, { passive: true });
+
+        // Respaldo para navegadores móviles con touchstart/touchend
+        let touchX = 0, touchY = 0, touchTime = 0;
+        this.canvas.addEventListener('touchstart', (e) => {
+          if (e.touches && e.touches.length === 1) {
+            touchX = e.touches[0].clientX;
+            touchY = e.touches[0].clientY;
+            touchTime = performance.now();
+          }
+        }, { passive: true });
+
+        this.canvas.addEventListener('touchend', (e) => {
+          if (e.changedTouches && e.changedTouches.length === 1) {
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+            const dist = Math.hypot(endX - touchX, endY - touchY);
+            const time = performance.now() - touchTime;
+            if (dist < 14 && time < 450) {
+              this.handleDirectTap(endX, endY);
+            }
+          }
+        }, { passive: true });
+
+        // Botones superiores
+        const heartViewBtn = document.getElementById('heartViewBtn');
+        if (heartViewBtn) {
+          heartViewBtn.addEventListener('click', () => this.switchToHeartTopView());
+        }
+
+        const recenterBtn = document.getElementById('recenterBtn');
+        if (recenterBtn) {
+          recenterBtn.addEventListener('click', () => this.recenterGalaxyView());
+        }
+
+        const audioBtn = document.getElementById('audioToggleBtn');
+        if (audioBtn) {
+          audioBtn.addEventListener('click', () => this.audioManager.toggle());
+        }
+
+        const startBtn = document.getElementById('startExperienceBtn');
+        const welcomeOverlay = document.getElementById('welcomeOverlay');
+        if (startBtn && welcomeOverlay) {
+          startBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.dismissWelcomeOverlay();
+          });
+          welcomeOverlay.addEventListener('click', () => {
+            this.dismissWelcomeOverlay();
+          });
+        }
+
+        const closeLetterBtn = document.getElementById('closeLetterBtn');
+        const modalXBtn = document.getElementById('modalXBtn');
+        const modalBackdrop = document.getElementById('modalBackdrop');
+
+        if (closeLetterBtn) closeLetterBtn.addEventListener('click', () => this.closeLetterModal());
+        if (modalXBtn) modalXBtn.addEventListener('click', () => this.closeLetterModal());
+        if (modalBackdrop) modalBackdrop.addEventListener('click', () => this.closeLetterModal());
+
+        this.controls.addEventListener('start', () => {
+          const guide = document.getElementById('interactiveGuide');
+          if (guide) guide.style.opacity = '0';
+        });
+      }
+
+      onWindowResize() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.camera.aspect = this.width / this.height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(this.width, this.height);
+      }
+
+      onPointerMove(event) {
+        this.mouse.x = (event.clientX / this.width) * 2 - 1;
+        this.mouse.y = -(event.clientY / this.height) * 2 + 1;
+
+        if (this.isCinematicFlightActive) return;
+
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const clickableObjects = [];
+        this.sunflowerObjects.forEach(obj => {
+          clickableObjects.push(obj.hitMesh);
+          clickableObjects.push(obj.labelSprite);
+        });
+
+        const intersects = this.raycaster.intersectObjects(clickableObjects, false);
+
+        if (intersects.length > 0) {
+          const hitObj = intersects[0].object;
+          const flowerData = this.sunflowerObjects.find(obj => obj.hitMesh === hitObj || obj.labelSprite === hitObj);
+
+          if (flowerData && this.hoveredSunflower !== flowerData) {
+            if (this.hoveredSunflower) {
+              gsap.to(this.hoveredSunflower.group.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.35, ease: 'power2.out' });
+            }
+            this.hoveredSunflower = flowerData;
+            document.body.style.cursor = 'pointer';
+            gsap.to(flowerData.group.scale, { x: 1.35, y: 1.35, z: 1.35, duration: 0.35, ease: 'back.out(1.5)' });
+          }
+        } else {
+          if (this.hoveredSunflower) {
+            gsap.to(this.hoveredSunflower.group.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.35, ease: 'power2.out' });
+            this.hoveredSunflower = null;
+          }
+          document.body.style.cursor = 'default';
+        }
+      }
+
+      /**
+       * Manejador de toque directo (Direct Tap): Funciona de forma infalible en móviles y computadoras.
+       */
+      handleDirectTap(clientX, clientY) {
+        const modalContainer = document.getElementById('letterModalContainer');
+        if (modalContainer && modalContainer.classList.contains('active')) return;
+        if (this.isCinematicFlightActive) return;
+
+        const rect = this.canvas.getBoundingClientRect();
+        const normX = ((clientX - rect.left) / rect.width) * 2 - 1;
+        const normY = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+        const tapRaycaster = new THREE.Raycaster();
+        tapRaycaster.setFromCamera(new THREE.Vector2(normX, normY), this.camera);
+
+        const clickableObjects = [];
+        this.sunflowerObjects.forEach(obj => {
+          clickableObjects.push(obj.hitMesh);
+          clickableObjects.push(obj.labelSprite);
+        });
+
+        const intersects = tapRaycaster.intersectObjects(clickableObjects, false);
+
+        if (intersects.length > 0) {
+          const hitObj = intersects[0].object;
+          const flowerData = this.sunflowerObjects.find(obj => obj.hitMesh === hitObj || obj.labelSprite === hitObj);
+          if (flowerData) {
+            this.performCinematicFlightToFlower(flowerData);
+          }
+        }
+      }
+
+      /**
+       * Vuelo cinemático hacia el girasol seleccionado
+       */
+      /**
+       * Vuelo cinemático de alta gama hacia el girasol:
+       * 1. Bloquea la posición orbital para evitar desincronización
+       * 2. Anima el florecimiento y agrandamiento del girasol (1.6x)
+       * 3. Acelera el giro del polen y chispas doradas
+       * 4. Suaviza la galaxia de fondo para crear profundidad de campo cinematográfica
+       * 5. Cámara en curva fluida con desaceleración dramática hacia el rostro de la flor
+       */
+      performCinematicFlightToFlower(flowerData) {
+        this.isCinematicFlightActive = true;
+        this.controls.enabled = false;
+        this.focusedFlower = flowerData;
+
+        // Posición mundial fija del girasol seleccionado
+        const targetWorldPos = new THREE.Vector3();
+        flowerData.group.getWorldPosition(targetWorldPos);
+        const flowerHeadPos = new THREE.Vector3(targetWorldPos.x, targetWorldPos.y + 2.0, targetWorldPos.z);
+
+        // Vector de aproximación oblicuo y cinematográfico frente a la flor
+        const camDir = targetWorldPos.clone().normalize();
+        const cameraTargetPosition = targetWorldPos.clone()
+          .add(camDir.multiplyScalar(13))
+          .add(new THREE.Vector3(0, 4.0, 0));
+
+        // Atenuar suavemente las partículas de la galaxia para destacar la flor
+        if (this.galaxyPoints) {
+          gsap.to(this.galaxyPoints.material, { opacity: 0.35, duration: 1.2 });
+        }
+
+        // Efecto de florecimiento dramático del girasol
+        gsap.to(flowerData.group.scale, {
+          x: 1.65,
+          y: 1.65,
+          z: 1.65,
+          duration: 1.4,
+          ease: 'back.out(1.6)'
+        });
+
+
+
+        const timeline = gsap.timeline({
+          onComplete: () => {
+            this.openLetterModal(flowerData.data);
+          }
+        });
+
+        // Movimiento curvo y suave de la cámara
+        timeline.to(this.camera.position, {
+          x: cameraTargetPosition.x,
+          y: cameraTargetPosition.y,
+          z: cameraTargetPosition.z,
+          duration: 1.55,
+          ease: 'power3.inOut'
+        }, 0);
+
+        timeline.to(this.controls.target, {
+          x: flowerHeadPos.x,
+          y: flowerHeadPos.y,
+          z: flowerHeadPos.z,
+          duration: 1.55,
+          ease: 'power3.inOut'
+        }, 0);
+      }
+
+      openLetterModal(letterData) {
+        const container = document.getElementById('letterModalContainer');
+        const card = document.getElementById('letterCard');
+        const chapterBadge = document.getElementById('modalChapterBadge');
+        const titleEl = document.getElementById('modalLetterTitle');
+        const imgEl = document.getElementById('modalLetterImg');
+        const bodyEl = document.getElementById('modalLetterBody');
+
+        chapterBadge.textContent = letterData.chapter;
+        titleEl.textContent = letterData.title;
+        imgEl.src = letterData.image;
+
+        bodyEl.innerHTML = '';
+        letterData.paragraphs.forEach(para => {
+          const p = document.createElement('p');
+          p.textContent = para;
+          bodyEl.appendChild(p);
+        });
+
+        const sign = document.createElement('div');
+        sign.className = 'letter-signature';
+        sign.innerHTML = `Con amor eterno, <br>${APP_CONFIG.senderName} ❤️`;
+        bodyEl.appendChild(sign);
+
+        container.classList.add('active');
+        requestAnimationFrame(() => {
+          card.classList.add('open');
+        });
+
+        this.triggerPetalConfetti();
+      }
+
+      triggerPetalConfetti() {
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 75,
+            spread: 80,
+            origin: { y: 0.6 },
+            colors: ['#ff5f6d', '#ffc371', '#fff176', '#69f0ae', '#40c4ff', '#b388ff', '#ff6ec7'],
+            ticks: 200,
+            gravity: 0.8,
+            scalar: 1.1
+          });
+
+          setTimeout(() => {
+            confetti({
+              particleCount: 40,
+              angle: 60,
+              spread: 55,
+              origin: { x: 0.1, y: 0.7 },
+              colors: ['#ff5f6d', '#69f0ae', '#40c4ff', '#b388ff', '#ff6ec7']
+            });
+          }, 200);
+
+          setTimeout(() => {
+            confetti({
+              particleCount: 40,
+              angle: 120,
+              spread: 55,
+              origin: { x: 0.9, y: 0.7 },
+              colors: ['#ff5f6d', '#69f0ae', '#40c4ff', '#b388ff', '#ff6ec7']
+            });
+          }, 350);
+        }
+      }
+
+      closeLetterModal() {
+        const container = document.getElementById('letterModalContainer');
+        const card = document.getElementById('letterCard');
+
+        card.classList.remove('open');
+        setTimeout(() => {
+          container.classList.remove('active');
+        }, 300);
+
+        // Restaurar la escala del girasol y la opacidad de la galaxia
+        if (this.focusedFlower) {
+          gsap.to(this.focusedFlower.group.scale, {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+            duration: 1.2,
+            ease: 'power2.out'
+          });
+        }
+
+        if (this.galaxyPoints) {
+          gsap.to(this.galaxyPoints.material, { opacity: 0.75, duration: 1.4 });
+        }
+
+        const timeline = gsap.timeline({
+          onComplete: () => {
+            this.controls.enabled = true;
+            this.isCinematicFlightActive = false;
+            this.focusedFlower = null; // Reanuda la órbita de forma fluida
+          }
+        });
+
+        timeline.to(this.camera.position, {
+          x: this.initialCameraPos.x,
+          y: this.initialCameraPos.y,
+          z: this.initialCameraPos.z,
+          duration: 1.6,
+          ease: 'power3.inOut'
+        }, 0);
+
+        timeline.to(this.controls.target, {
+          x: this.initialTargetPos.x,
+          y: this.initialTargetPos.y,
+          z: this.initialTargetPos.z,
+          duration: 1.6,
+          ease: 'power3.inOut'
+        }, 0);
+      }
+
+      switchToHeartTopView() {
+        if (this.isCinematicFlightActive) return;
+
+        gsap.to(this.camera.position, {
+          x: 0,
+          y: 118,
+          z: 0.1,
+          duration: 1.6,
+          ease: 'power2.inOut'
+        });
+
+        gsap.to(this.controls.target, {
+          x: 0,
+          y: 0,
+          z: 0,
+          duration: 1.6,
+          ease: 'power2.inOut'
+        });
+      }
+
+      recenterGalaxyView() {
+        if (this.isCinematicFlightActive) return;
+
+        gsap.to(this.camera.position, {
+          x: this.initialCameraPos.x,
+          y: this.initialCameraPos.y,
+          z: this.initialCameraPos.z,
+          duration: 1.4,
+          ease: 'power2.inOut'
+        });
+
+        gsap.to(this.controls.target, {
+          x: this.initialTargetPos.x,
+          y: this.initialTargetPos.y,
+          z: this.initialTargetPos.z,
+          duration: 1.4,
+          ease: 'power2.inOut'
+        });
+      }
+
+      dismissWelcomeOverlay() {
+        const welcome = document.getElementById('welcomeOverlay');
+        if (welcome) {
+          welcome.style.opacity = '0';
+          welcome.style.visibility = 'hidden';
+          setTimeout(() => {
+            welcome.style.display = 'none';
+          }, 800);
+        }
+        if (!this.audioManager.isPlaying) {
+          this.audioManager.play();
+        }
+      }
+
+      /* ========================================================================
+         BUCLE DE ANIMACIÓN Y RENDER
+         ======================================================================== */
+      animate() {
+        requestAnimationFrame(() => this.animate());
+
+        const dt = this.clock.getDelta();
+        const time = this.clock.getElapsedTime();
+
+        // Rotación lenta de la galaxia en forma de corazón
+        if (this.galaxyPoints) {
+          this.galaxyPoints.rotation.y = time * 0.025;
+        }
+
+        // Latido del corazón central
+        if (this.heartGroup) {
+          const beatCycle = (time * 2.4) % (Math.PI * 2);
+          const beat1 = Math.pow(Math.sin(beatCycle), 24) * 0.14;
+          const beat2 = Math.pow(Math.sin(beatCycle + 0.55), 24) * 0.07;
+          const totalBeat = 1.0 + beat1 + beat2;
+
+          this.heartGroup.scale.set(totalBeat, totalBeat, totalBeat);
+          this.heartGroup.rotation.y = time * 0.10;
+
+          if (this.heartLight) {
+            this.heartLight.intensity = 2.5 + totalBeat * 2.5;
+          }
+        }
+
+        // Órbitas de los girasoles siguiendo el contorno del corazón cósmico
+        this.sunflowerObjects.forEach(obj => {
+          if (this.focusedFlower !== obj) {
+            obj.currentAngle += obj.speed * dt;
+          }
+
+          const t = obj.currentAngle;
+          const s = obj.scaleHeart;
+
+          const hx = 16 * Math.pow(Math.sin(t), 3) * s;
+          const hz = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * s;
+          const y = obj.heightOffset + Math.sin(t * 3.0) * 1.5;
+
+          obj.group.position.set(hx, y, hz);
+
+          if (obj.headGroup) {
+            obj.headGroup.rotation.z += 0.008;
+          }
+
+          // Orientación hacia la cámara para máxima belleza visual
+          obj.group.lookAt(this.camera.position.x, obj.group.position.y, this.camera.position.z);
+        });
+
+        // Actualizar río cósmico de pétalos dorados en halo exterior
+        this.cosmicStreamPetals.forEach(p => {
+          p.t += p.speed * dt;
+          const t = p.t;
+          const s = p.scaleHeart;
+
+          const hx = 16 * Math.pow(Math.sin(t), 3) * s;
+          const hz = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * s;
+          const y = p.heightOffset + Math.sin(time * p.wobbleSpeed + p.phase) * 1.5;
+
+          p.mesh.position.set(hx, y, hz);
+
+          p.mesh.rotation.x += p.rotSpeedX;
+          p.mesh.rotation.y += p.rotSpeedY;
+          p.mesh.rotation.z += p.rotSpeedZ;
+        });
+
+        // Frases poéticas flotantes
+        this.floatingTextSprites.forEach(item => {
+          item.angle += item.speed * dt;
+          const t = item.angle;
+          const s = item.scaleHeart;
+          const x = 16 * Math.pow(Math.sin(t), 3) * s;
+          const z = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * s;
+          const y = item.baseY + Math.sin(time * 1.4 + item.phase) * 1.6;
+          item.sprite.position.set(x, y, z);
+        });
+
+        // Lluvia de pétalos en 3D
+        this.petalsArray.forEach(p => {
+          p.mesh.position.y -= p.speedY;
+
+          p.mesh.position.x += Math.sin(time * p.wobbleSpeed + p.phase) * p.wobbleDist;
+          p.mesh.position.z += Math.cos(time * p.wobbleSpeed + p.phase) * p.wobbleDist;
+
+          p.mesh.rotation.x += p.rotSpeedX;
+          p.mesh.rotation.y += p.rotSpeedY;
+          p.mesh.rotation.z += p.rotSpeedZ;
+
+          if (p.mesh.position.y < -35) {
+            p.mesh.position.y = 35;
+            p.mesh.position.x = (Math.random() - 0.5) * 90;
+            p.mesh.position.z = (Math.random() - 0.5) * 90;
+          }
+        });
+
+        if (this.controls && this.controls.enabled) {
+          this.controls.update();
+        }
+
+        this.renderer.render(this.scene, this.camera);
+      }
+    }
+
+    /* ==========================================================================
+       6. INICIALIZACIÓN GLOBAL
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('uiMainTitle').textContent = APP_CONFIG.mainTitle;
+      document.getElementById('uiSubTitle').textContent = APP_CONFIG.subTitle;
+      document.getElementById('welcomeRecipient').textContent = `Para ${APP_CONFIG.recipientName}`;
+
+      window.galaxyApp = new CosmicGalaxyExperience();
+    });
+  </script>
+</body>
+
+</html>
